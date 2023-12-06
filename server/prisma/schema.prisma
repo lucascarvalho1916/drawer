@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  login         String    @unique
+  email         String    @unique
+  password_hash String
+  start_at      DateTime  @default(now())
+  end_at        DateTime?
+  is_admin      Boolean   @default(false)
+  created_at    DateTime  @default(now())
+
+  Collaborator Collaborator[]
+  Event        Event[]
+  Draw         Draw[]
+
+  @@map("users")
+}
+
+model Draw {
+  id          String    @id @default(uuid())
+  description String
+  start_at    DateTime  @default(now())
+  end_at      DateTime?
+  publicize   Boolean   @default(false)
+  created_at  DateTime  @default(now())
+
+  created_by User   @relation(fields: [user_id], references: [id])
+  user_id    String
+
+  Drawn Event[]
+
+  @@map("draws")
+}
+
+model Collaborator {
+  id         String    @id @default(uuid())
+  name       String
+  cpf        String    @unique
+  start_at   DateTime  @default(now())
+  end_at     DateTime?
+  created_at DateTime  @default(now())
+
+  created_by User   @relation(fields: [user_id], references: [id])
+  user_id    String
+
+  Drawn Event[]
+
+  @@map("collaborators")
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  value        Float
+  drawn_at     DateTime @default(now())
+  release_date DateTime
+
+  drawn_by User   @relation(fields: [user_id], references: [id])
+  user_id  String
+
+  draw    Draw   @relation(fields: [draw_id], references: [id])
+  draw_id String
+
+  collaborator    Collaborator @relation(fields: [collaborator_id], references: [id])
+  collaborator_id String
+
+  @@map("events")
+}
